@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- the mapbox libraries -->
+		<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js'></script>
+		<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css' rel='stylesheet' />
+	</head>
+
+	<body>
+		<!-- the div for the map -->
+		<!-- note the style is in-line, we have been putting it in the header. Outcome is the same -->
+		<div id='map' style='width: 800px; height: 800px;'></div>
+		<!-- the script that controls the map -->
+		<script>
+			//my Mapbox token
+			mapboxgl.accessToken = 'pk.eyJ1Ijoic2V0b20iLCJhIjoiY2o5NmN0dHB4MDNoaDJ3bWw1N2JvemlpaSJ9.McVFy9qwVkdrV_anNWv7jw';
+			
+			//The map variable
+			var map = new mapboxgl.Map({
+			    container: 'map',
+			    style: 'mapbox://styles/setom/cjo4qpqk904sp2sldezo7nhya',
+			});
+			//set the center & zoom of the map
+			map.setCenter([-122, 45]);
+			map.setZoom(2);
+
+			//on map load, do some stuff
+			map.on('load', function(){
+				//add a source layer for earthquakes
+				map.addSource('earthquakes', {
+			        "type": "geojson",
+			        "data": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
+			    });
+			    //add the earthquakes to the map
+			    map.addLayer({
+			    	"id":"equakes",
+			    	"type":"circle",
+			    	"source":"earthquakes"
+			    });
+
+				//add a handler for clicking/popups 
+				//Thanks to: https://www.mapbox.com/mapbox-gl-js/example/popup-on-click/ 
+				map.on('click', 'equakes', function (e) {
+			        var coordinates = e.features[0].geometry.coordinates.slice();
+			        //print the properties to the console when clicked
+			        console.log(e.features[0].properties);
+			        //THE HTML ELEMENT THAT WILL GO IN THE POPUP
+			        var description = "<p>Mag: " + e.features[0].properties.mag + "</p> <p>Status: " + e.features[0].properties.status + "</p> <p>Tsunami: " + e.features[0].properties.tsunami + "</p>";
+			        //var description = e.features[0].properties.mag;
+
+			        // Ensure that if the map is zoomed out such that multiple
+			        // copies of the feature are visible, the popup appears
+			        // over the copy being pointed to.
+			        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+			            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+			        }
+			        //make the popup
+			        new mapboxgl.Popup()
+			            .setLngLat(coordinates)
+			            .setHTML(description)
+			            .addTo(map);
+
+			    });
+			    map.setCenter([-122, 47]);
+			});
+		</script>
+	</body>
+</html>
